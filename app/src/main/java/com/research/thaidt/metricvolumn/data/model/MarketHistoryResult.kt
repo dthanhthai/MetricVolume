@@ -19,7 +19,7 @@ class MarketHistoryResult {
     var quantity: Double? = null
     @SerializedName("Price")
     @Expose
-    var price: Long? = null
+    var price: Double? = null
     @SerializedName("Total")
     @Expose
     var total: Double? = null
