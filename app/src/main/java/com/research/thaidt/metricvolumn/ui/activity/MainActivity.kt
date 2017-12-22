@@ -7,13 +7,12 @@ import android.util.Log
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.research.thaidt.metricvolumn.R
-import com.research.thaidt.metricvolumn.data.repository.ApiClient
 import com.research.thaidt.metricvolumn.data.repository.BittrexService
 import com.research.thaidt.metricvolumn.model.MarketHistory
 import com.research.thaidt.metricvolumn.model.MarketHistoryResult
 import com.research.thaidt.metricvolumn.ui.adapter.VolBuyAdapter
+import com.research.thaidt.metricvolumn.ui.adapter.VolSellAdapter
 import com.research.thaidt.metricvolumn.utils.Constants
-import io.reactivex.Scheduler
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import retrofit2.Retrofit
@@ -27,11 +26,15 @@ class MainActivity : AppCompatActivity() {
     val TAG = "MainActivity";
 
     var disposable: Disposable? = null
+    var cacheVolBuy: MutableList<MarketHistoryResult> = arrayListOf()
+    var cacheVolSell: MutableList<MarketHistoryResult> = arrayListOf()
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        resetCacheVol()
 
         val retrofit = Retrofit.Builder()
                 .baseUrl(Constants.URL_BASE)
@@ -42,12 +45,19 @@ class MainActivity : AppCompatActivity() {
         val bittrexService = retrofit.create(BittrexService::class.java)
 
         disposable = bittrexService.getMarketHistory("USDT-BTC").subscribeOn(Schedulers.io()).observeOn(AndroidSchedulers.mainThread()).subscribe(
-                { result: MarketHistory? ->
-                    if (result != null && result?.success!!) {
-                        Log.i(TAG, "Result size: " + result.result?.size)
-                        val volBuyAdapter = result.result?.let { VolBuyAdapter(it) }
-                        list_vold_buy.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
-                        list_vold_buy.adapter = volBuyAdapter
+                { responseData: MarketHistory? ->
+                    if (responseData != null && responseData?.success!!) {
+                        Log.i(TAG, "Result size: " + responseData.result?.size)
+
+                        responseData.result?.let { handleVolBuySell(it) }
+
+                        val volBuyAdapter = VolBuyAdapter(cacheVolBuy)
+                        list_vol_buy.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+                        list_vol_buy.adapter = volBuyAdapter
+
+                        val volSellAdapter = VolSellAdapter(cacheVolSell)
+                        list_vol_sell.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, false)
+                        list_vol_sell.adapter = volSellAdapter
                     }
                 },
                 { error ->
@@ -55,6 +65,21 @@ class MainActivity : AppCompatActivity() {
                     Log.i(TAG, "Error: " + error.message)
                 }
         )
+    }
+
+    private fun handleVolBuySell(rawDatas: List<MarketHistoryResult>) {
+        for (item in rawDatas) {
+            if (item.orderType?.toLowerCase().equals("buy")) {
+                cacheVolBuy.add(item)
+            } else if (item.orderType?.toLowerCase().equals("sell")) {
+                cacheVolSell.add(item)
+            }
+        }
+    }
+
+    private fun resetCacheVol() {
+        cacheVolBuy = arrayListOf();
+        cacheVolSell = arrayListOf()
     }
 
     override fun onDestroy() {
