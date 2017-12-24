@@ -1,11 +1,16 @@
 package com.research.thaidt.metricvolumn.ui.adapter
 
+import android.content.res.ColorStateList
+import android.graphics.Color
+import android.graphics.Typeface
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.research.thaidt.metricvolumn.R
 import com.research.thaidt.metricvolumn.model.MarketHistoryResult
+import kotlinx.android.synthetic.main.item_vol_buy.view.*
 import kotlinx.android.synthetic.main.item_vol_sell.view.*
 
 /**
@@ -32,7 +37,16 @@ class VolSellAdapter(private val listItem: List<MarketHistoryResult>) : Recycler
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(data: MarketHistoryResult) = with(itemView) {
             if (data.orderType?.toLowerCase().equals("sell")) {
-                vol_sell_text.text = data.total.toString()
+                if(data.total!! >= 1000){
+                    vol_sell_text.setTextColor(Color.parseColor("#760d1f"))
+                    vol_sell_text.setTypeface(null, Typeface.BOLD)
+                    Log.i("VolBuyAdapter", "[ViewHolder Color] " + data.total)
+                }else{
+                    vol_sell_text.setTextColor(Color.parseColor("#757575"))
+                    vol_sell_text.setTypeface(null, Typeface.NORMAL)
+                }
+                Log.i("VolBuyAdapter", "[ViewHolder] " + data.total)
+                vol_sell_text.text = (Math.round(data.total!! * 100.00) / 100.00).toString()
             }
         }
     }
