@@ -41,6 +41,8 @@ class MainActivity : AppCompatActivity() {
     var mHandler: Handler? = null
     var mReloadRunable: Runnable? = null
     var menu: Menu? = null
+    var volBuyAdapter: VolBuyAdapter? = null
+    var volSellAdapter: VolSellAdapter? = null
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -49,7 +51,9 @@ class MainActivity : AppCompatActivity() {
 
         this.title = "USDT-BTC";
         mHandler = Handler()
-        resetCacheVol()
+
+        cacheVolBuy = arrayListOf()
+        cacheVolSell = arrayListOf()
 
         retrofit = Retrofit.Builder()
                 .baseUrl(Constants.URL_BASE)
@@ -100,12 +104,12 @@ class MainActivity : AppCompatActivity() {
                                 list_vol_recenlty.adapter = volRecentlyAdapter
                                 list_vol_recenlty.scrollToPosition(responseData.result?.size!! - 1)
 
-                                val volBuyAdapter = VolBuyAdapter(cacheVolBuy)
+                                volBuyAdapter = VolBuyAdapter(cacheVolBuy)
                                 list_vol_buy.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, true)
                                 list_vol_buy.adapter = volBuyAdapter
                                 list_vol_buy.scrollToPosition(cacheVolBuy.size - 1)
 
-                                val volSellAdapter = VolSellAdapter(cacheVolSell)
+                                volSellAdapter = VolSellAdapter(cacheVolSell)
                                 list_vol_sell.layoutManager = LinearLayoutManager(this, LinearLayout.VERTICAL, true)
                                 list_vol_sell.adapter = volSellAdapter
                                 list_vol_sell.scrollToPosition(cacheVolSell.size - 1)
@@ -146,8 +150,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resetCacheVol() {
-        cacheVolBuy = arrayListOf();
-        cacheVolSell = arrayListOf()
+        volBuyAdapter!!.clearData()
+        volSellAdapter!!.clearData()
+
+        vol_buy_percent_text.text = "(" + 0 + "%)"
+        vol_sell_percent_text.text = "(" + 0 + "%)"
+
+        vol_buy_total_text.text = "0"
+        vol_sell_total_text.text = 0.toString()
     }
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {

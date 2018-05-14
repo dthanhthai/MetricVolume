@@ -16,7 +16,7 @@ import kotlinx.android.synthetic.main.item_vol_sell.view.*
 /**
  * Created by ThaiDT1 on 12/21/2017.
  */
-class VolSellAdapter(private val listItem: List<MarketHistoryResult>) : RecyclerView.Adapter<VolSellAdapter.ViewHolder>() {
+class VolSellAdapter(private var listItem: List<MarketHistoryResult>) : RecyclerView.Adapter<VolSellAdapter.ViewHolder>() {
 
 //    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
 //       return ViewHolder(LayoutInflater.from(parent.context).inflate(R.layout.item_vol_buy, parent, false))
@@ -33,6 +33,10 @@ class VolSellAdapter(private val listItem: List<MarketHistoryResult>) : Recycler
         return listItem?.size!!
     }
 
+    fun clearData(){
+        listItem = emptyList()
+        notifyDataSetChanged()
+    }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         fun bind(data: MarketHistoryResult) = with(itemView) {
