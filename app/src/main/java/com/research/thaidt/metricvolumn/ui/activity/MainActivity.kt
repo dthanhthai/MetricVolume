@@ -1,13 +1,19 @@
 package com.research.thaidt.metricvolumn.ui.activity
 
+import android.app.Dialog
+import android.content.DialogInterface
 import android.graphics.Typeface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.view.Window
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.Toast
 import com.research.thaidt.metricvolumn.R
@@ -43,13 +49,14 @@ class MainActivity : AppCompatActivity() {
     var menu: Menu? = null
     var volBuyAdapter: VolBuyAdapter? = null
     var volSellAdapter: VolSellAdapter? = null
+    var marketPair = "USDT-BTC"
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        this.title = "USDT-BTC";
+        this.title = marketPair
         mHandler = Handler()
 
         cacheVolBuy = arrayListOf()
@@ -76,7 +83,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadHistoryData() {
         val bittrexService = retrofit?.create(BittrexService::class.java)
-        disposable = bittrexService?.getMarketHistory("USDT-BTC")
+        disposable = bittrexService?.getMarketHistory(marketPair)
                 ?.subscribeOn(Schedulers.io())
                 ?.observeOn(AndroidSchedulers.mainThread())
                 ?.subscribe(
@@ -119,6 +126,7 @@ class MainActivity : AppCompatActivity() {
                                 mHandler?.postDelayed(mReloadRunable, 5000)
                             } else {
                                 Toast.makeText(this, "Message: " + responseData?.message, Toast.LENGTH_LONG).show()
+                                showErrorDialog("Message: " + responseData?.message)
                                 Log.e(TAG, "Error: " + responseData?.message)
                             }
                         },
@@ -150,8 +158,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun resetCacheVol() {
-        volBuyAdapter!!.clearData()
-        volSellAdapter!!.clearData()
+        volBuyAdapter?.clearData()
+        volSellAdapter?.clearData()
 
         vol_buy_percent_text.text = "(" + 0 + "%)"
         vol_sell_percent_text.text = "(" + 0 + "%)"
@@ -166,7 +174,7 @@ class MainActivity : AppCompatActivity() {
         return true
     }
 
-    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
         when (item?.getItemId()) {
             R.id.reset_item -> {
                 resetCacheVol()
@@ -174,7 +182,7 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
             R.id.change_market_item -> {
-
+                showChangeMarketDialog()
                 return true
             }
             else -> return super.onOptionsItemSelected(item)
@@ -189,5 +197,34 @@ class MainActivity : AppCompatActivity() {
 
     override fun onPause() {
         super.onPause()
+    }
+
+    fun showChangeMarketDialog(){
+        val dialog = Dialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.edit_market_dialog)
+        dialog.setCanceledOnTouchOutside(true)
+//        dialog.setCancelable(false)
+
+        val newMarketPair = dialog.findViewById<EditText>(R.id.input_edit_info)
+        newMarketPair.setText(marketPair.toString())
+
+        dialog.findViewById<View>(R.id.dialog_cancel_btn).setOnClickListener {
+            dialog.dismiss()
+        }
+        dialog.findViewById<View>(R.id.dialog_submit_btn).setOnClickListener {
+            marketPair = newMarketPair.text.toString()
+            loadHistoryData()
+            dialog.dismiss()
+        }
+        dialog.show()
+
+    }
+
+    fun showErrorDialog(msg: String){
+        val dialogBuiler = AlertDialog.Builder(this)
+        dialogBuiler.setTitle("Error")
+        dialogBuiler.setMessage(msg)
+        dialogBuiler.setNegativeButton("Close", DialogInterface.OnClickListener { dialog, which ->  dialog.dismiss()})
     }
 }
