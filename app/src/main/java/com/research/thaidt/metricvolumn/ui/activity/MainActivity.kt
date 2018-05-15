@@ -214,6 +214,7 @@ class MainActivity : AppCompatActivity() {
         }
         dialog.findViewById<View>(R.id.dialog_submit_btn).setOnClickListener {
             marketPair = newMarketPair.text.toString()
+            this.title = marketPair.toUpperCase()
             loadHistoryData()
             dialog.dismiss()
         }
